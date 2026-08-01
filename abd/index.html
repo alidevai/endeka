@@ -22,7 +22,7 @@ body{margin:0;background:var(--zem);color:var(--yaz);font:13.5px/1.5 var(--sans)
 .durum{display:flex;align-items:center;gap:8px;font:400 11.5px var(--mono);color:var(--mut)}
 .durum i{width:6px;height:6px;border-radius:50%;background:var(--art);display:inline-block}
 .bant{padding:11px 16px;font-size:12.5px;border:1px solid;line-height:1.6}
-.bant.gec{color:#8a4a12;background:rgba(200,120,30,.10);border-color:rgba(200,120,30,.45)}
+.bant.gec{color:var(--vur);background:var(--vur-z);border-color:color-mix(in srgb,var(--vur) 55%,transparent)}
 .bant.sab{color:var(--ort);background:var(--vur-z);border-color:var(--hat)}
 .bant b{letter-spacing:.02em}
 #gecemodu{cursor:default}
@@ -113,9 +113,12 @@ footer a{color:var(--vur)}
  background:color-mix(in srgb,var(--eks) 7%,transparent)}
 .rz.sar{color:var(--vur);border-color:color-mix(in srgb,var(--vur) 45%,transparent)}
 .bant{padding:11px 16px;font-size:12.5px;border:1px solid;line-height:1.6}
-.bant.gec{color:#8a4a12;background:rgba(200,120,30,.10);border-color:rgba(200,120,30,.45)}
+.bant.gec{color:var(--vur);background:var(--vur-z);border-color:color-mix(in srgb,var(--vur) 55%,transparent)}
 .bant.sab{color:var(--ort);background:var(--vur-z);border-color:var(--hat)}
 .nabiz small{font-size:10.5px;color:var(--mut);font-family:var(--mono)}
+
+#gecemodu{cursor:pointer;user-select:none;padding:1px 5px;border:1px solid var(--hat);margin-left:6px}
+#gecemodu:hover{border-color:var(--vur);color:var(--vur)}
 </style></head><body><div class="sar">
 
 <header class="ust">
@@ -123,7 +126,7 @@ footer a{color:var(--vur)}
     <div class="logo">Σ</div>
     <div><h1>Endeka <span class="rozet">ABD</span></h1><small>MOMENTUM TERMİNALİ · NASDAQ · NYSE</small></div>
   </div>
-  <div class="durum"><i></i> VERİ 2026-07-31 · 19:14 TRT · 800 HİSSE · <a href="../">BIST bölümü →</a></div>
+  <div class="durum"><i></i> VERİ 2026-07-31 · 19:24 TRT · 800 HİSSE · <a href="../">BIST bölümü →</a> <span id="gecemodu"></span></div>
 </header>
 
 
@@ -587,4 +590,85 @@ aylık kontrol. Uzun dönem ölçümünde (2014-2026) model %37/yıl ve maksimum
 altında olabilir.<br>
 Veri: TradingView tarayıcısı, Yahoo Finance · fiyatlar gecikmeli olabilir · her işlem günü güncellenir.
 </footer>
-</div></body></html>
+</div><script>/* ENDEKA — saate bagli kademeli tema.
+   ONEMLI: acik ve koyu paletler arasinda DOGRUDAN gecis yapilmaz; yapilsaydi
+   gecisin ortasinda yazi ve zemin ayni griye gelip kontrast sifirlanirdi.
+   Bunun yerine her palet KENDI ICINDE kararir, orta noktada palet anlik degisir.
+   Boylece kontrast hicbir an 4.5:1'in altina inmez.
+   Basliktaki gostergeye tiklanarak: OTOMATIK -> ACIK -> KOYU dongusu. */
+(function () {
+  var ACIK = {zem:'#f7f7f5', pan:'#ffffff', hat:'#e3e2dd', hat2:'#efeeea', yaz:'#101519',
+              ort:'#535e63', mut:'#98a0a1', vur:'#9a7418', art:'#137a52', eks:'#bb4434',
+              vurz:'rgba(154,116,24,.07)'};
+  var ACIK_LOS = {zem:'#e4e0d8', pan:'#f2efe9', hat:'#cfcabf', hat2:'#dcd8cf', yaz:'#0c1013',
+                  ort:'#485257', mut:'#7f8789', vur:'#7d5d11', art:'#0f6543', eks:'#a03a2f',
+                  vurz:'rgba(125,93,17,.10)'};
+  var KOYU_LOS = {zem:'#141b1c', pan:'#1a2223', hat:'#2b3335', hat2:'#202829', yaz:'#eef3f2',
+                  ort:'#a7b3b5', mut:'#7b8788', vur:'#e0b45c', art:'#4fb887', eks:'#e0776a',
+                  vurz:'rgba(224,180,92,.10)'};
+  var KOYU = {zem:'#070909', pan:'#0d1112', hat:'#1e2426', hat2:'#131a1b', yaz:'#e3e8e8',
+              ort:'#95a1a3', mut:'#5f6b6b', vur:'#d4a94c', art:'#41a97a', eks:'#d3685b',
+              vurz:'rgba(212,169,76,.09)'};
+
+  function hex(h) { h = h.slice(1); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+  function kar(a, b, t) {
+    if (a.charAt(0) !== '#') return t < 0.5 ? a : b;
+    var A = hex(a), B = hex(b);
+    return 'rgb(' + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t); }).join(',') + ')';
+  }
+  function palet(p1, p2, t) {
+    var o = {};
+    for (var k in p1) o[k] = kar(p1[k], p2[k], t);
+    return o;
+  }
+
+  /* 0 = tam gunduz, 1 = tam gece. 18:00-21:00 kararir, 06:00-08:00 acilir. */
+  function faktor() {
+    var d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+    if (h >= 21 || h < 6) return 1;
+    if (h >= 8 && h < 18) return 0;
+    if (h >= 18) return (h - 18) / 3;
+    return 1 - (h - 6) / 2;
+  }
+
+  function uygula() {
+    var secim = null;
+    try { secim = localStorage.getItem('endeka_tema'); } catch (e) {}
+    var t = secim === 'acik' ? 0 : secim === 'koyu' ? 1 : faktor();
+    var p = t < 0.5 ? palet(ACIK, ACIK_LOS, t / 0.5) : palet(KOYU_LOS, KOYU, (t - 0.5) / 0.5);
+    var r = document.documentElement.style;
+    r.setProperty('--zem', p.zem);   r.setProperty('--pan', p.pan);
+    r.setProperty('--hat', p.hat);   r.setProperty('--hat2', p.hat2);
+    r.setProperty('--yaz', p.yaz);   r.setProperty('--ort', p.ort);
+    r.setProperty('--mut', p.mut);   r.setProperty('--vur', p.vur);
+    r.setProperty('--art', p.art);   r.setProperty('--eks', p.eks);
+    r.setProperty('--vur-z', p.vurz);
+    var e = document.getElementById('gecemodu');
+    if (e) {
+      e.textContent = secim === 'acik' ? '☀ açık' : secim === 'koyu' ? '☾ koyu'
+                    : (t === 0 ? '☀' : t === 1 ? '☾' : '◐ %' + Math.round(t * 100));
+      e.title = 'Tema: ' + (secim ? 'elle secildi' : 'saate gore otomatik') + ' — degistirmek icin tikla';
+    }
+  }
+
+  function kur() {
+    uygula();
+    setInterval(uygula, 60000);
+    var e = document.getElementById('gecemodu');
+    if (e) {
+      e.style.cursor = 'pointer';
+      e.style.userSelect = 'none';
+      e.addEventListener('click', function () {
+        var s = null;
+        try { s = localStorage.getItem('endeka_tema'); } catch (er) {}
+        var yeni = s === null ? 'acik' : s === 'acik' ? 'koyu' : null;
+        try { yeni ? localStorage.setItem('endeka_tema', yeni) : localStorage.removeItem('endeka_tema'); } catch (er) {}
+        uygula();
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', kur);
+  else kur();
+})();
+</script></body></html>
